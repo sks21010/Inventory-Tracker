@@ -1,14 +1,30 @@
 'use client'
 import Image from "next/image"
-import {useState, useEffect} from 'react'
+import {useState, useEffect, useRef} from 'react'
 import {firestore} from '@/firebase'
 import {Box, Modal, Typography, Stack, Button, TextField} from '@mui/material'
 import {collection, deleteDoc, doc, getDocs, query, getDoc, setDoc} from 'firebase/firestore'
+import CameraComponent from '@/CameraComponent'
+import {OpenAI} from 'openai'
+import dotenv from 'dotenv'
+dotenv.config()
+console.log(process.env)
+
+
+const openai = new OpenAI({
+  apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
+  dangerouslyAllowBrowser: true
+});
+
 
 export default function Home() {
   const [inventory, setInventory] = useState([])
   const [open, setOpen] = useState(false)
   const [itemName, setItemName] = useState('')
+  const [numberOfCameras, setNumberOfCameras] = useState(0);
+  const [image, setImage] = useState(null);
+  const camera = useRef(null);
+
 
   const updateInventory = async () => {
     const snapshot = query(collection(firestore, 'inventory'))
@@ -68,6 +84,38 @@ export default function Home() {
     
   }
 
+  const fetchOpenAIResponse = async () => {
+    try {
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: "Give a concise, generic name for what this image depicts."
+              },
+              {
+                type: "image_url",
+                image_url: {
+                  url: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Kleenex-small-box.jpg/800px-Kleenex-small-box.jpg",
+                  detail: "low"
+                }
+
+              }
+            ]
+          }
+        ],
+        // max_tokens: 1000
+      });
+      const completionText = response.choices[0].text;
+    
+    } catch (error) {
+      console.error('Error fetching OpenAI response:', error);
+    }
+  };
+
   useEffect(() => {
     updateInventory()
   }, [])
@@ -76,140 +124,154 @@ export default function Home() {
   const handleClose = () => setOpen(false)
 
   return (
-    <Box 
-      width="100vw" 
-      height="100vh" 
-      display="flex" 
-      flexDirection="column"
-      justifyContent="center" 
-      alignItems="center" 
-      gap={2}
-    >
-      <Modal open={open} onClose={handleClose}>
-        <Box 
-          position="absolute" 
-          top="50%" 
-          left="50%"
-          width={400}
-          bgcolor="white"
-          border="2px solid #000"
-          boxShadow={24}
-          p={4}
-          display="flex"
-          flexDirection="column"
-          gap={3}
-          sx={{
-            transform: "translate(-50%,-50%)" 
-          }}
-        >
-          <Typography variant="h6">Add Item</Typography>
-          <Stack width="100%" direction="row" spacing={2}>
-            <TextField 
-              variant="outlined" 
-              fullWidth 
-              value={itemName}
-              onChange={(e)=>{
-                setItemName(e.target.value)
+    
+    <>
+      <CameraComponent ref={camera} numberOfCamerasCallback={setNumberOfCameras} /><img src={image} alt='Image preview' /><button
+        onClick={() => {
+          const photo = camera.current.takePhoto()
+          setImage(photo)
+        } } /><button
+          hidden={numberOfCameras <= 1}
+          onClick={() => {
+            camera.current.switchCamera()
+          } } /><Box
+            width="100vw"
+            height="100vh"
+            display="flex"
+            flexDirection="column"
+            justifyContent="center"
+            alignItems="center"
+            gap={2}
+          >
+          <Modal open={open} onClose={handleClose}>
+            <Box
+              position="absolute"
+              top="50%"
+              left="50%"
+              width={400}
+              bgcolor="white"
+              border="2px solid #000"
+              boxShadow={24}
+              p={4}
+              display="flex"
+              flexDirection="column"
+              gap={3}
+              sx={{
+                transform: "translate(-50%,-50%)"
               }}
             >
-            </TextField>
+              <Typography variant="h6">Add Item</Typography>
+              <Stack width="100%" direction="row" spacing={2}>
+                <TextField
+                  variant="outlined"
+                  fullWidth
+                  value={itemName}
+                  onChange={(e) => {
+                    setItemName(e.target.value)
+                  } }
+                >
+                </TextField>
 
-            <Button
-              variant="outlined"
-              onClick={() => {
-                addItem(itemName)
-                setItemName("")
-                handleClose()
-              }}   
-            
-            >
-              Add
-
-            </Button>
-
-
-
-          </Stack>
-
-        </Box>
-      </Modal>
-      <Button
-        variant="outlined"
-        onClick={() => {
-          handleOpen()
-        }}
-      
-      >
-        Add New Item
-      </Button>
-      <Box border="1px solid #333">
-        <Box
-          width="800px"
-          height="100px"
-          bgcolor="#ADD8E6"
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-        >
-          <Typography variant="h2" color="#333">
-            Inventory Items
-          </Typography>
-
-        </Box>
-
-
-      
-        <Stack width="800px" height="300px" spacing={2} overflow="auto">
-          {inventory.map(({name, quantity}) => (
-            <Box 
-              key={name} 
-              width="100%" 
-              minHeight="150px" 
-              display="flex" 
-              alignItems="center" 
-              justifyContent="space-between"
-              bgColor="#f0f0f0" 
-              padding={5}
-            >
-              <Typography variant="h3" color="#333" textAlign="center">
-                {name.charAt(0).toUpperCase() + name.slice(1)}
-              </Typography>
-              <Typography variant="h3" color="#333" textAlign="center">
-                {quantity}
-              </Typography>
-
-              <Stack direction="row" spacing={2}>
-                <Button variant="contained" onClick={() => {
-                  addItem(name)
-                }}
+                <Button
+                  variant="outlined"
+                  onClick={() => {
+                    addItem(itemName)
+                    setItemName("")
+                    handleClose()
+                  } }
 
                 >
                   Add
+
                 </Button>
 
-                <Button variant="contained" onClick={() => {
-                  removeItem(name)
-                }}
 
-                >
-                  Remove
-                </Button>
-
-                <Button variant="contained" onClick={() => {
-                  removeAllItems(name)
-                }}
-
-                >
-                  Remove All
-                </Button>
 
               </Stack>
-            </Box>
-          ))}
 
-        </Stack>
-      </Box>
-      
-    </Box>
+            </Box>
+          </Modal>
+          <Button
+            variant="outlined"
+            onClick={() => {
+              handleOpen()
+            } }
+
+          >
+            Add New Item
+          </Button>
+          <Box border="1px solid #333">
+            <Box
+              width="800px"
+              height="100px"
+              bgcolor="#ADD8E6"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+            >
+              <Typography variant="h2" color="#333">
+                Inventory Items
+              </Typography>
+
+            </Box>
+
+
+
+            <Stack width="800px" height="300px" spacing={2} overflow="auto">
+              {inventory.map(({ name, quantity }) => (
+                <Box
+                  key={name}
+                  width="100%"
+                  minHeight="150px"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="space-between"
+                  bgcolor="#f0f0f0"
+                  padding={5}
+                >
+                  <Typography variant="h3" color="#333" textAlign="center">
+                    {name.charAt(0).toUpperCase() + name.slice(1)}
+                  </Typography>
+                  <Typography variant="h3" color="#333" textAlign="center">
+                    {quantity}
+                  </Typography>
+
+                  <Stack direction="row" spacing={2}>
+                    <Button variant="contained" onClick={() => {
+                      addItem(name)
+                    } }
+
+                    >
+                      Add
+                    </Button>
+
+                    <Button variant="contained" onClick={() => {
+                      removeItem(name)
+                    } }
+
+                    >
+                      Remove
+                    </Button>
+
+                    <Button variant="contained" onClick={() => {
+                      removeAllItems(name)
+                    } }
+
+                    >
+                      Remove All
+                    </Button>
+
+                  </Stack>
+                </Box>
+              ))}
+
+            </Stack>
+          </Box>
+
+        </Box>
+    </>
   ) 
 }
+
+
+
