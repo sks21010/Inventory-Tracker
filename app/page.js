@@ -285,6 +285,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 
+
 const openai = new OpenAI({
   apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
   dangerouslyAllowBrowser: true,
@@ -375,6 +376,7 @@ export default function Home() {
       
     } catch (error) {
       console.error('Error fetching OpenAI response:', error);
+      return null;
     }
   };
 
@@ -382,7 +384,6 @@ export default function Home() {
     updateInventory();
   }, []);
 
-  // Handle photo capture
   const handleTakePhoto = (photo) => {
     setImage(photo);
     console.log(photo);
@@ -503,10 +504,16 @@ export default function Home() {
             >
               Take Photo
             </Button> */}
-            <CameraComponent onTakePhoto={handleTakePhoto}/>
-            <Button variant="contained" onClick={handleTakePhoto}>
-              Take Photo
-            </Button>
+            <CameraComponent ref={cameraRef}/>
+            <Button 
+              variant="contained" 
+              onClick={() => {
+                const photo = cameraRef.current.takePhoto();
+                handleTakePhoto(photo);
+              }}
+              
+              
+            >Take Photo</Button>
             <Button
               variant="contained"
               hidden={numberOfCameras <= 1}

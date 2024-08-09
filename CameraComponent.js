@@ -41,28 +41,28 @@ const CameraComponent = forwardRef(({ onTakePhoto, numberOfCamerasCallback }, re
   const [numberOfCameras, setNumberOfCameras] = useState(0);
 
   // Expose takePhoto method to the parent component
-  // useImperativeHandle(ref, () => ({
-  //   takePhoto: () => {
-  //     if (camera.current) {
-  //       return camera.current.takePhoto();
-  //       // if (onTakePhoto) {
-  //       //   onTakePhoto(photo);  // Pass the photo to the parent component
-  //       // }
-  //     }
-  //     else {
-  //       return null;
-  //     }
-  //   },
-  //   switchCamera: () => {
-  //     if (camera.current) {
-  //       camera.current.switchCamera();
-  //     }
-  //   },
-  // }));
+  useImperativeHandle(ref, () => ({
+    takePhoto: () => {
+      if (camera.current) {
+        return camera.current.takePhoto();
+        // if (onTakePhoto) {
+        //   onTakePhoto(photo);  // Pass the photo to the parent component
+        // }
+      }
+      else {
+        return null;
+      }
+    },
+    switchCamera: () => {
+      if (camera.current) {
+        camera.current.switchCamera();
+      }
+    },
+  }));
 
   return (
     <>
-      <Camera ref={camera} numberOfCamerasCallback={setNumberOfCameras}/>
+      <Camera ref={camera}/>
       {/* <button
         onClick={() => {
           const photo = camera.current.takePhoto();
