@@ -281,6 +281,8 @@ import { Box, Modal, Typography, Stack, Button, TextField } from '@mui/material'
 import { collection, deleteDoc, doc, getDocs, query, getDoc, setDoc } from 'firebase/firestore';
 import CameraComponent from '@/CameraComponent';
 import { OpenAI } from 'openai';
+import {Helmet} from 'react-helmet'; // maybe don't need
+import Head from 'next/head';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -406,7 +408,20 @@ export default function Home() {
   };
 
   return (
-    <>
+    <Box
+      width="100vw"
+      height="100vh"
+      display="flex"
+      flexDirection="column"
+      justifyContent="center"
+      alignItems="center"
+      gap={2}
+    >
+      <Head>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap" />
+      </Head>
+      <Typography variant="h2" sx={{ fontFamily: 'Georgia, serif' }}>Welcome to the AI Inventory Management Web App!</Typography>
+      
       <Button
         variant="contained"
         onClick={() => setCameraOpen(true)}
@@ -541,7 +556,7 @@ export default function Home() {
         </Box>
       </Modal>
       {photo && <img src={photo} alt='Image preview' />}
-    </>
+    </Box>
   );
 }
 
