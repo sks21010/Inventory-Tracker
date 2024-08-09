@@ -348,7 +348,7 @@ export default function Home() {
   };
 
   // Fetch OpenAI response
-  const fetchOpenAIResponse = async () => {
+  const fetchOpenAIResponse = async (image_input) => {
     try {
       const response = await openai.chat.completions.create({
         model: "gpt-4o-mini",
@@ -363,15 +363,19 @@ export default function Home() {
               {
                 type: "image_url",
                 image_url: {
-                  url: `data:image/jpeg;base64,${image}`,
-                  detail: "low",
+                  url: image_input,
+                  // url: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Kleenex-small-box.jpg/800px-Kleenex-small-box.jpg",
+                  detail: "low"
+                  
                 },
               },
             ],
           },
         ],
       });
-      const completionText = response.choices[0].text;
+      console.log(response)
+      const completionText = response.choices[0].message.content;
+      console.log(completionText)
       return completionText
       
     } catch (error) {
@@ -384,9 +388,21 @@ export default function Home() {
     updateInventory();
   }, []);
 
-  const handleTakenPhoto = (takenPhoto) => {
-    setPhoto(takenPhoto);
+  // const base64ToUrl = (base64String) => {
+  //   return `data:image/jpeg;base64,${base64String}`;
+  // };
+  
+  
+  const handleTakenPhoto = async (takenPhoto) => {
+    // const photoUrl = base64ToUrl(takenPhoto)
+    setPhoto(takenPhoto); // makes the photo accessible throughout the Home() function scope
     console.log(takenPhoto);
+    const itemName = await fetchOpenAIResponse(takenPhoto);
+    console.log(itemName);
+    if (itemName) {
+      addItem(itemName.trim());
+    }
+    
   };
 
   return (
