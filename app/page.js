@@ -296,7 +296,7 @@ export default function Home() {
   const [open, setOpen] = useState(false);
   const [itemName, setItemName] = useState('');
   const [cameraOpen, setCameraOpen] = useState(false);
-  const [image, setImage] = useState(null);
+  const [photo, setPhoto] = useState(null);
   const [numberOfCameras, setNumberOfCameras] = useState(0);
   const cameraRef = useRef(null);
 
@@ -384,9 +384,9 @@ export default function Home() {
     updateInventory();
   }, []);
 
-  const handleTakePhoto = (photo) => {
-    setImage(photo);
-    console.log(photo);
+  const handleTakenPhoto = (takenPhoto) => {
+    setPhoto(takenPhoto);
+    console.log(takenPhoto);
   };
 
   return (
@@ -508,8 +508,8 @@ export default function Home() {
             <Button 
               variant="contained" 
               onClick={() => {
-                const photo = cameraRef.current.takePhoto();
-                handleTakePhoto(photo);
+                const newPhoto = cameraRef.current.takePhoto();
+                handleTakenPhoto(newPhoto);
               }}
               
               
@@ -524,7 +524,7 @@ export default function Home() {
             
         </Box>
       </Modal>
-      {image && <img src={image} alt='Image preview' />}
+      {photo && <img src={photo} alt='Image preview' />}
     </>
   );
 }
