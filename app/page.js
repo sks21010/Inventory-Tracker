@@ -88,7 +88,7 @@ export default function Home() {
             content: [
               {
                 type: "text",
-                text: "Give a concise, generic name of 1-2 words for what this image depicts. Hyphenated words count as 1 word. No need for a period at the end",
+                text: "Give a concise, generic name of 1-2 words for what this image depicts. Hyphenated words count as 1 word. No need for a period at the end, and only capitalize the first letter of a multi-word output",
               },
               {
                 type: "image_url",
@@ -128,11 +128,17 @@ export default function Home() {
     if (itemName) {
       addItem(itemName.trim());
     }
+    return itemName
     
   };
 
+  const handleSubmit = async (takenPhoto) => {
+    const response = await handleTakenPhoto(takenPhoto)
+    window.alert(`${response} has been added to your inventory`);
+  };
+
   return (
-    <>
+    <Box display="flex" justifyContent="center">
       <Head>
           <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap" />
           
@@ -219,7 +225,7 @@ export default function Home() {
                 borderRadius="10px"
               >
                 <Typography variant="h3" color="#333" textAlign="center">
-                  {name.charAt(0).toUpperCase() + name.slice(1)}
+                  {name.trim().toLowerCase().charAt(0).toUpperCase() + name.slice(1)}
                 </Typography>
                 <Typography variant="h3" color="#333" textAlign="center">
                   {quantity}
@@ -296,6 +302,7 @@ export default function Home() {
                 onClick={() => {
                   const newPhoto = cameraRef.current.takePhoto();
                   handleTakenPhoto(newPhoto);
+                  handleSubmit(newPhoto);
                 }}
                 
                 
@@ -313,8 +320,10 @@ export default function Home() {
         
         {/* {photo && <img src={photo} alt='Image preview' width="200px" height="200px"/> } */}
         
+      <Typography variant="h7" textAlign="center">&copy; 2024 Sri Kiran Sripada. All rights reserved.</Typography> 
       </Box>
-    </>
+      
+    </Box>
   );
 }
 
